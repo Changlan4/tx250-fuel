@@ -1,0 +1,1005 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0a0c0f" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="油耗本" />
+<link rel="manifest" href="./manifest.webmanifest" />
+<link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png" />
+<title>天鹰 TX250 · 油耗本</title>
+<style>
+  :root{
+    --bg:#0a0c0f;
+    --card:#14171d;
+    --card2:#0e1116;
+    --line:#262b34;
+    --text:#e9e7e2;
+    --dim:#8a919c;
+    --gold:#e8c46a;
+    --gold2:#b8912f;
+    --green:#4ec48a;
+    --red:#e0655f;
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:radial-gradient(120% 60% at 50% 0%, #14171d 0%, var(--bg) 55%) no-repeat, var(--bg);
+    color:var(--text);
+    font-family:system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    font-size:15px; line-height:1.5;
+    padding-bottom:calc(84px + env(safe-area-inset-bottom));
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  header{
+    max-width:520px; margin:0 auto;
+    padding:20px 18px 12px;
+    display:flex; align-items:flex-end; justify-content:space-between; gap:10px;
+  }
+  header h1{ font-size:16px; margin:0; font-weight:700; letter-spacing:.3px; }
+  header .sub{ color:var(--dim); font-size:11.5px; margin-top:2px; }
+  header .badge{
+    font-size:11px; color:var(--gold); border:1px solid rgba(232,196,106,.35);
+    background:rgba(232,196,106,.08); padding:3px 9px; border-radius:99px; white-space:nowrap;
+  }
+  main{ max-width:520px; margin:0 auto; padding:0 14px; }
+  .tab-page{ display:none; }
+  .tab-page.show{ display:block; animation:fade .18s ease-out; }
+  @keyframes fade{ from{opacity:0; transform:translateY(4px);} to{opacity:1; transform:none;} }
+
+  .card{
+    background:linear-gradient(180deg,#171b21,#13161b);
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:16px;
+    margin-bottom:12px;
+  }
+  .card h2{
+    font-size:13px; margin:0 0 12px; font-weight:700; color:#cfd3da; letter-spacing:.4px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .card-head{ display:flex; align-items:baseline; justify-content:space-between; margin-bottom:8px; }
+  .card-head h2{ margin:0; }
+  .card-head span{ color:var(--dim); font-size:11.5px; }
+
+  /* 首页大数字 */
+  .hero .label{ color:var(--dim); font-size:12px; letter-spacing:.4px; }
+  .hero .num{
+    font-size:46px; font-weight:800; line-height:1.05; letter-spacing:-1.5px;
+    font-variant-numeric:tabular-nums; margin-top:4px;
+  }
+  .hero .num small{ font-size:14px; font-weight:500; color:var(--dim); margin-left:7px; letter-spacing:0; }
+  .hero .num.dim{ color:#3c424c; }
+  .hero-row{ display:flex; gap:14px; margin-top:8px; color:var(--dim); font-size:12.5px; flex-wrap:wrap; }
+  .hero-row b{ color:#cfd3da; font-weight:600; }
+
+  /* 表单 */
+  label{ display:block; font-size:12px; color:var(--dim); }
+  label > span{ display:block; margin-bottom:5px; }
+  input,select{
+    width:100%; margin-top:0;
+    min-width:0;
+    background:var(--card2);
+    border:1px solid var(--line);
+    border-radius:12px;
+    color:var(--text);
+    padding:12px;
+    font-size:16px;
+    font-family:inherit;
+    font-variant-numeric:tabular-nums;
+    appearance:none; -webkit-appearance:none;
+  }
+  select{ background-image:linear-gradient(45deg,transparent 50%,var(--dim) 50%),linear-gradient(135deg,var(--dim) 50%,transparent 50%); background-position:calc(100% - 18px) 19px,calc(100% - 13px) 19px; background-size:5px 5px,5px 5px; background-repeat:no-repeat; padding-right:34px; }
+  input:focus,select:focus{ outline:none; border-color:var(--gold2); }
+  input::placeholder{ color:#4d545e; }
+  .row{ margin-bottom:11px; }
+  .row.two{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; }
+  .hint{ color:var(--dim); font-size:11.5px; margin:10px 0 0; line-height:1.55; }
+
+  button{ font:inherit; color:inherit; background:none; border:none; cursor:pointer; }
+  .primary{
+    width:100%; padding:14px; border-radius:14px; margin-top:4px;
+    background:linear-gradient(180deg,#f0d391,#cca346);
+    color:#2a1f06; font-weight:800; font-size:16px; letter-spacing:.5px;
+  }
+  .primary:active{ transform:scale(.995); filter:brightness(.97); }
+  .ghost{
+    width:100%; padding:12px; border-radius:13px; margin-top:9px;
+    border:1px solid var(--line); background:var(--card2); color:var(--text);
+    font-weight:600; font-size:14px;
+  }
+  .ghost:active{ background:#12161c; }
+  .ghost.danger{ color:var(--red); border-color:rgba(224,101,95,.28); }
+
+  /* 记录列表 */
+  .rec-list{ list-style:none; margin:0; padding:0; }
+  .rec{
+    display:flex; align-items:center; gap:10px;
+    padding:11px 0; border-top:1px solid #1d222a;
+  }
+  .rec:first-child{ border-top:none; }
+  .rec-main{ flex:1; min-width:0; }
+  .rec-top{ display:flex; align-items:baseline; gap:8px; font-size:14px; }
+  .rec-top b{ font-weight:700; font-variant-numeric:tabular-nums; }
+  .rec-top .odo{ color:var(--dim); font-size:12px; font-variant-numeric:tabular-nums; }
+  .rec-sub{ color:var(--dim); font-size:12px; margin-top:2px; font-variant-numeric:tabular-nums; }
+  .del{
+    flex:0 0 auto; width:32px; height:32px; border-radius:10px;
+    color:#6b7280; font-size:19px; line-height:1;
+    border:1px solid transparent;
+  }
+  .del:active{ color:var(--red); border-color:rgba(224,101,95,.3); }
+  .empty{ color:var(--dim); font-size:13px; padding:14px 0; text-align:center; }
+  .tag{
+    display:inline-block; font-size:10.5px; padding:1px 7px; border-radius:99px;
+    border:1px solid var(--line); color:var(--dim); vertical-align:1px;
+  }
+  .tag.gold{ color:var(--gold); border-color:rgba(232,196,106,.35); background:rgba(232,196,106,.07); }
+  .tag.warn{ color:#e8a06a; border-color:rgba(232,160,106,.35); background:rgba(232,160,106,.07); }
+
+  /* 分析页 */
+  .dual{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; }
+  .big-stat .k{ color:var(--dim); font-size:11.5px; }
+  .big-stat .v{
+    font-size:27px; font-weight:800; letter-spacing:-.5px; font-variant-numeric:tabular-nums; margin-top:2px;
+  }
+  .big-stat .v small{ font-size:12px; font-weight:500; color:var(--dim); margin-left:4px; letter-spacing:0; }
+  .vsline{ margin-top:10px; font-size:12px; color:var(--dim); }
+  .vsline b{ color:var(--gold); font-weight:700; }
+  .vsline b.up{ color:#e8a06a; }
+  .vsline b.down{ color:var(--green); }
+
+  .quad{ display:grid; grid-template-columns:1fr 1fr; gap:6px; margin:4px 0 14px; }
+  .qcell{
+    background:var(--card2); border:1px solid var(--line); border-radius:12px;
+    padding:13px 8px; text-align:center; font-size:12px; color:#6d7480;
+    transition:all .2s;
+  }
+  .qcell.active{
+    background:rgba(232,196,106,.12); border-color:var(--gold2);
+    color:var(--gold); font-weight:700;
+  }
+  .style-title{ font-size:17px; font-weight:800; margin:0 0 6px; }
+  .style-text{ margin:0; color:#b6bcc6; font-size:13px; line-height:1.6; }
+
+  .bars{ display:flex; align-items:flex-end; gap:8px; height:158px; padding:22px 2px 0; overflow-x:auto; }
+  .bar-wrap{ flex:1 0 34px; display:flex; flex-direction:column; align-items:center; justify-content:flex-end; height:100%; }
+  .bar{
+    width:100%; max-width:34px; min-height:6px;
+    background:linear-gradient(180deg,#e8c46a,#9f7a27);
+    border-radius:7px 7px 3px 3px; position:relative;
+    transition:height .35s cubic-bezier(.2,.8,.3,1);
+  }
+  .bar span{
+    position:absolute; top:-17px; left:50%; transform:translateX(-50%);
+    font-size:10.5px; color:#cfd3da; font-variant-numeric:tabular-nums; white-space:nowrap;
+  }
+  .bar-x{ font-size:10px; color:#5c636f; margin-top:6px; }
+
+  .grid2{ display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:10px; margin-bottom:12px; }
+  .stat{ background:var(--card); border:1px solid var(--line); border-radius:16px; padding:13px 14px; }
+  .stat .k{ color:var(--dim); font-size:11px; letter-spacing:.2px; }
+  .stat .v{ font-size:18px; font-weight:700; margin-top:3px; font-variant-numeric:tabular-nums; }
+
+  /* 车辆页 */
+  .vfield{ margin-bottom:12px; }
+  .howto{ color:#b6bcc6; font-size:12.5px; line-height:1.75; }
+  .howto ol{ margin:0; padding-left:18px; }
+  .howto li{ margin-bottom:6px; }
+  .howto b{ color:var(--gold); }
+
+  /* 底部导航 */
+  nav{
+    position:fixed; left:0; right:0; bottom:0; z-index:50;
+    max-width:520px; margin:0 auto;
+    display:flex; gap:4px;
+    padding:7px 10px calc(7px + env(safe-area-inset-bottom));
+    background:rgba(11,13,17,.9);
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    border-top:1px solid var(--line);
+  }
+  nav button{
+    flex:1; padding:8px 0 7px; border-radius:13px;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    color:#6d7480; font-size:11px; font-weight:600;
+  }
+  nav button svg{ width:19px; height:19px; }
+  nav button.active{ color:var(--gold); background:rgba(232,196,106,.09); }
+
+  #toast{
+    position:fixed; left:50%; bottom:calc(100px + env(safe-area-inset-bottom));
+    transform:translate(-50%,10px); z-index:99;
+    background:#2a3039; color:#fff; font-size:13px; padding:10px 18px; border-radius:99px;
+    opacity:0; pointer-events:none; transition:all .22s; white-space:nowrap;
+    box-shadow:0 8px 30px rgba(0,0,0,.5);
+  }
+  #toast.show{ opacity:1; transform:translate(-50%,0); }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1 id="hTitle">天鹰 TX250 油耗本</h1>
+    <div class="sub" id="hSub">每次加满，油钱和油耗都记下来</div>
+  </div>
+  <div class="badge" id="hBadge">250 踏板</div>
+</header>
+
+<main>
+
+  <!-- ================= 记录 ================= -->
+  <section class="tab-page show" id="page-record">
+    <div class="card hero" id="hero"></div>
+
+    <form class="card" id="fuelForm" autocomplete="off">
+      <h2>记一笔加油</h2>
+
+      <div class="row">
+        <label><span>日期</span><input type="date" id="f-date" /></label>
+      </div>
+
+      <div class="row two">
+        <label><span>仪表总里程（km）</span><input type="text" inputmode="decimal" id="f-odo" placeholder="如 12850" /></label>
+        <label><span>这次加了（升）</span><input type="text" inputmode="decimal" id="f-liters" placeholder="如 13.5" /></label>
+      </div>
+
+      <div class="row two">
+        <label><span>花了多少（元）</span><input type="text" inputmode="decimal" id="f-money" placeholder="选填" /></label>
+        <label><span>加满了没有</span>
+          <select id="f-full">
+            <option value="1">加满了</option>
+            <option value="0">没加满</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="row">
+        <label><span>这箱主要跑</span>
+          <select id="f-road">
+            <option value="市区">市区</option>
+            <option value="郊区">郊区</option>
+            <option value="高速">高速</option>
+            <option value="混合" selected>混合</option>
+          </select>
+        </label>
+      </div>
+
+      <button class="primary" type="submit">保存这一笔</button>
+      <p class="hint">加完油当场记，总里程读仪表上那个最大的里程数。升数看加油机，别只记金额。</p>
+    </form>
+
+    <div class="card">
+      <div class="card-head"><h2>加油记录</h2><span id="recCount"></span></div>
+      <ul class="rec-list" id="recList"></ul>
+    </div>
+  </section>
+
+  <!-- ================= 分析 ================= -->
+  <section class="tab-page" id="page-analysis">
+    <div class="card">
+      <div class="dual">
+        <div class="big-stat">
+          <div class="k">近 3 次平均</div>
+          <div class="v" id="avgRecent">--</div>
+        </div>
+        <div class="big-stat">
+          <div class="k">累计平均</div>
+          <div class="v" id="avgAll">--</div>
+        </div>
+      </div>
+      <div class="vsline" id="vsLine">--</div>
+      <div class="vsline" id="anomalyNote" style="display:none;color:#e8a06a"></div>
+    </div>
+
+    <div class="card">
+      <h2>驾驶风格</h2>
+      <div class="quad" id="quad"></div>
+      <p class="style-title" id="styleTitle">还没有数据</p>
+      <p class="style-text" id="styleText">先记两次加满的加油，就能算出第一段油耗。</p>
+    </div>
+
+    <div class="card">
+      <h2>每箱油耗</h2>
+      <div class="bars" id="bars"></div>
+      <p class="hint" id="barsHint">横轴是第几段，柱子上是那一段的百公里油耗。</p>
+    </div>
+
+    <div class="grid2" id="statGrid"></div>
+  </section>
+
+  <!-- ================= 车辆 ================= -->
+  <section class="tab-page" id="page-vehicle">
+    <div class="card">
+      <h2>车辆档案</h2>
+      <div class="vfield">
+        <label><span>车型</span><input type="text" id="v-name" /></label>
+      </div>
+      <div class="row two">
+        <label><span>油箱容积（升）</span><input type="text" inputmode="decimal" id="v-tank" /></label>
+        <label><span>官方油耗（L/100km）</span><input type="text" inputmode="decimal" id="v-official" /></label>
+      </div>
+      <button class="primary" type="button" id="v-save">保存</button>
+      <p class="hint">26 款 TX250F 黑金版主油箱 12 升，车重 165kg，加 92 号油；厂家没给统一油耗，公开资料标称约 2.8~3.0，这里按 2.9 填。以你车说明书为准，改了要点保存。</p>
+    </div>
+
+    <div class="card">
+      <h2>数据</h2>
+      <button class="ghost" type="button" id="btn-export">导出备份（JSON 文件）</button>
+      <button class="ghost" type="button" id="btn-import">从备份文件导入</button>
+      <button class="ghost danger" type="button" id="btn-clear">清空全部记录</button>
+      <input type="file" id="fileInput" accept=".json,application/json" style="display:none" />
+      <p class="hint">数据只存在这台手机的浏览器里。换手机或清理浏览器数据前，先导出一份备份。</p>
+    </div>
+
+    <div class="card">
+      <h2>怎么用</h2>
+      <div class="howto">
+        <ol>
+          <li>每次加完油，当场记：总里程、加了几升、花多少钱，选<b>加满</b>。</li>
+          <li>必须加满才算得准。万一有次没加满，选“没加满”，程序会自动和下一次合并算。</li>
+          <li>第一箱油只是起点，算不出油耗。从第二箱加满开始，每记一次就出一段。</li>
+          <li>至少攒 <b>3 箱</b>，平均油耗才稳。单次油耗上下浮动很正常。</li>
+          <li>“驾驶风格”看两件事：比标称费油多少、每箱稳不稳。要更准，可以每次顺手选一下主要路况。</li>
+        </ol>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<nav>
+  <button type="button" data-tab="record" class="active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V4h9v16M4 12h9M13 8h3a2 2 0 0 1 2 2v6a1.5 1.5 0 0 0 3 0V9l-2-2"/></svg>
+    记录
+  </button>
+  <button type="button" data-tab="analysis">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19V5M4 19h16M8 15l4-5 3 3 5-7"/></svg>
+    分析
+  </button>
+  <button type="button" data-tab="vehicle">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="17" r="3"/><circle cx="18" cy="17" r="3"/><path d="M9 17h6M6 14l3-5h5l3 5M14 9V6h3"/></svg>
+    车辆
+  </button>
+</nav>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  'use strict';
+
+  var KEY = 'tytx250_fuel_v1';
+  var SCHEMA_VERSION = 2;
+  var DEFAULTS = {
+    // 26款 TX250F 黑金版：主油箱 12L（汽车之家参数表）；官方标称油耗约 2.8~3.0，取 2.9
+    vehicle: { name: '天鹰 TX250 黑金版（26款）', tank: 12, official: 2.9 },
+    records: []
+  };
+
+  var $ = function(id){ return document.getElementById(id); };
+  var clone = function(o){ return JSON.parse(JSON.stringify(o)); };
+  var num = function(v, d){ return (Number(v) || 0).toFixed(d); };
+  var fmtInt = function(v){ return Math.round(Number(v) || 0).toLocaleString('zh-CN'); };
+  var numText = function(v){
+    var n = Number(v) || 0;
+    return (Math.round(n) === n) ? n.toFixed(1) : String(n);
+  };
+
+  function todayStr(){
+    var d = new Date();
+    var p = function(n){ return String(n).padStart(2, '0'); };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+  function fmtDate(s){
+    if(!s) return '';
+    var m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})/);
+    return m ? m[2] + '-' + m[3] : String(s);
+  }
+
+  var state = load();
+
+  // 演示模式：地址后加 ?demo=1。只在没有真实记录时生效，全程不写入本地存储。
+  var DEMO = /[?&]demo=1/.test(location.search);
+  if(DEMO && state.records.length === 0){
+    state.records = demoRecords();
+  }
+
+  function demoRecords(){
+    // 第一个数字是“几天前”
+    var raw = [
+      [48, 1000, 10.5, 82, true,  '市区'],
+      [41, 1150,  4.0, 31, false, '市区'],
+      [34, 1300,  6.8, 53, true,  '市区'],
+      [27, 1600, 10.2, 80, true,  '郊区'],
+      [19, 1900,  9.6, 75, true,  '郊区'],
+      [11, 2210, 10.5, 82, true,  '混合'],
+      [ 4, 2500,  9.8, 76, true,  '混合']
+    ];
+    return raw.map(function(a, i){
+      return {
+        id: 'demo' + i,
+        ts: 1700000000000 + i * 86400000,
+        date: dayBefore(a[0]),
+        odo: a[1], liters: a[2], money: a[3], full: a[4], road: a[5]
+      };
+    });
+  }
+
+  function dayBefore(n){
+    var d = new Date();
+    d.setDate(d.getDate() - n);
+    var p = function(x){ return String(x).padStart(2, '0'); };
+    return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate());
+  }
+
+  function load(){
+    try{
+      var raw = localStorage.getItem(KEY);
+      if(raw){
+        var d = JSON.parse(raw);
+        var v = Object.assign({}, DEFAULTS.vehicle, d.vehicle || {});
+        // 旧版默认值是未经核实的 13L / 3.0，升级时自动纠正；手动改过的不动
+        if((d.version || 1) < 2 && Number(v.tank) === 13 && Number(v.official) === 3){
+          v.tank = DEFAULTS.vehicle.tank;
+          v.official = DEFAULTS.vehicle.official;
+        }
+        return {
+          version: SCHEMA_VERSION,
+          vehicle: v,
+          records: Array.isArray(d.records) ? d.records : []
+        };
+      }
+    }catch(e){ /* 忽略损坏数据 */ }
+    var fresh = clone(DEFAULTS);
+    fresh.version = SCHEMA_VERSION;
+    return fresh;
+  }
+
+  function save(){
+    if(DEMO) return; // 演示数据不落盘
+    try{
+      localStorage.setItem(KEY, JSON.stringify(state));
+    }catch(e){
+      toast('保存失败：浏览器可能禁用了本地存储');
+    }
+  }
+
+  var toastTimer = null;
+  function toast(msg){
+    var el = $('toast');
+    if(!el) return;
+    el.textContent = msg;
+    el.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ el.classList.remove('show'); }, 2200);
+  }
+
+  /* ---------------- 核心计算：满箱法 ---------------- */
+  function compute(){
+    var v = state.vehicle;
+
+    // 按日期排，同一天按录入先后。补录的旧记录会插回正确位置。
+    var rs = clone(state.records).sort(function(a, b){
+      var d = String(a.date || '').localeCompare(String(b.date || ''));
+      if(d !== 0) return d;
+      return (Number(a.ts) || 0) - (Number(b.ts) || 0);
+    });
+
+    var segs = [];
+    var anomalies = [];
+    var anomalyIds = {};
+    var anchor = -1;
+    var acc = 0;
+    var anchorRecord = null;
+    var lastOdo = -1;
+
+    for(var i = 0; i < rs.length; i++){
+      var r = rs[i];
+      var odo = Number(r.odo) || 0;
+
+      // 里程必须比上一条大。不成立说明这条填错了，整条不参与计算。
+      if(lastOdo >= 0 && odo <= lastOdo){
+        anomalies.push(r);
+        anomalyIds[r.id] = true;
+        continue;
+      }
+      lastOdo = odo;
+
+      if(anchor === -1){
+        if(r.full){ anchor = i; anchorRecord = r; }
+        continue;
+      }
+
+      acc += Number(r.liters) || 0;
+
+      if(r.full){
+        var dist = odo - (Number(rs[anchor].odo) || 0);
+        if(dist > 0){
+          segs.push({
+            dist: dist,
+            liters: acc,
+            l100: acc / dist * 100,
+            date: r.date,
+            road: r.road,
+            fromOdo: Number(rs[anchor].odo),
+            toOdo: odo,
+            fromDate: rs[anchor].date
+          });
+        }
+        anchor = i;
+        acc = 0;
+      }
+    }
+
+    var totalDist = 0, totalLiters = 0;
+    segs.forEach(function(s){ totalDist += s.dist; totalLiters += s.liters; });
+
+    var avg = totalDist > 0 ? totalLiters / totalDist * 100 : 0;
+
+    var recent = segs.slice(-3);
+    var rDist = 0, rLiters = 0;
+    recent.forEach(function(s){ rDist += s.dist; rLiters += s.liters; });
+    var recentAvg = rDist > 0 ? rLiters / rDist * 100 : 0;
+
+    var cv = 0, sd = 0;
+    if(segs.length >= 2 && avg > 0){
+      var vals = segs.map(function(s){ return s.l100; });
+      var mean = vals.reduce(function(a, b){ return a + b; }, 0) / vals.length;
+      var variance = vals.reduce(function(a, b){ return a + (b - mean) * (b - mean); }, 0) / vals.length;
+      sd = Math.sqrt(variance);
+      cv = sd / avg;
+    }
+
+    var paid = rs.filter(function(r){ return Number(r.money) > 0; });
+    var totalMoney = paid.reduce(function(a, r){ return a + Number(r.money); }, 0);
+    var paidLiters = paid.reduce(function(a, r){ return a + (Number(r.liters) || 0); }, 0);
+    var unitPrice = paidLiters > 0 ? totalMoney / paidLiters : 0;
+    var costPer100 = unitPrice > 0 ? unitPrice * avg : 0;
+    var costPerKm = costPer100 / 100;
+
+    var tank = Number(v.tank) || 0;
+    var range = (tank > 0 && avg > 0) ? tank / avg * 100 : 0;
+
+    var style = judgeStyle(avg, cv, v.official, segs.length);
+
+    return {
+      rs: rs, segs: segs,
+      totalDist: totalDist, totalLiters: totalLiters,
+      avg: avg, recentAvg: recentAvg,
+      cv: cv, sd: sd,
+      totalMoney: totalMoney, unitPrice: unitPrice,
+      costPer100: costPer100, costPerKm: costPerKm,
+      range: range, firstFull: anchorRecord, style: style,
+      anomalies: anomalies, anomalyIds: anomalyIds
+    };
+  }
+
+  /* ---------------- 驾驶风格判断 ---------------- */
+  function judgeStyle(avg, cv, official, n){
+    var o = Number(official) || 0;
+
+    if(n === 0){
+      return {
+        ready: false, hasOfficial: o > 0, level: -1, unstable: false,
+        title: '还看不出风格',
+        text: '至少要两次“加满”的加油记录，才能算出第一段油耗。'
+      };
+    }
+
+    var ratio = o > 0 ? avg / o : 0;
+    var level = 1;
+    if(o > 0){
+      if(ratio < 1.05) level = 0;
+      else if(ratio < 1.2) level = 1;
+      else if(ratio < 1.4) level = 2;
+      else level = 3;
+    }
+    var unstable = n >= 2 && cv >= 0.13;
+
+    if(n === 1){
+      if(o > 0){
+        var pct1 = Math.round((avg / o - 1) * 100);
+        var vs1 = pct1 >= 0 ? ('高 ' + pct1 + '%') : ('低 ' + Math.abs(pct1) + '%');
+        return {
+          ready: true, hasOfficial: true, level: level, unstable: false,
+          title: level >= 2 ? '比标称费油' : (level === 0 ? '比标称省油' : '油耗接近标称'),
+          text: '目前只有一段完整油耗，比标称' + vs1 + '。稳不稳还看不出来，再记两三箱就有结论了。'
+        };
+      }
+      return {
+        ready: true, hasOfficial: false, level: level, unstable: false,
+        title: '第一段油耗出来了',
+        text: '只有一段数据，还看不出稳不稳、算不算费油。到“车辆”页填上官方油耗，再记两三箱。'
+      };
+    }
+
+    if(o <= 0){
+      return {
+        ready: true, hasOfficial: false, level: level, unstable: unstable,
+        title: unstable ? '油耗忽高忽低' : '油耗比较稳定',
+        text: unstable
+          ? '各箱之间落差较大，可能与路况、天气或骑行节奏有关。到“车辆”页填上官方油耗，能进一步判断是不是偏费油。'
+          : '各箱油耗比较接近，骑行节奏平稳。到“车辆”页填上官方油耗，能看出是否比标称费油。'
+      };
+    }
+
+    var pct = Math.round((ratio - 1) * 100);
+    var vs = pct >= 0 ? ('高 ' + pct + '%') : ('低 ' + Math.abs(pct) + '%');
+
+    if(level >= 2 && unstable){
+      return {
+        ready: true, hasOfficial: true, level: level, unstable: true,
+        title: '偏激进，时快时慢',
+        text: '平均油耗比标称' + vs + '，而且每箱落差大。典型的有时候拉高转、有时候正常骑，两种状态混着来。'
+      };
+    }
+    if(level >= 2){
+      return {
+        ready: true, hasOfficial: true, level: level, unstable: false,
+        title: '稳定偏高',
+        text: '平均油耗比标称' + vs + '，而且每箱都费。说明不是偶尔猛，而是日常骑法偏费油；也可能市区多、天冷、胎压不足或载人。'
+      };
+    }
+    if(unstable){
+      return {
+        ready: true, hasOfficial: true, level: level, unstable: true,
+        title: '偶尔激进',
+        text: '整体不算费油，但个别几箱明显升高，可能是跑了高速、山路，或者偶尔拧得狠。'
+      };
+    }
+    return {
+      ready: true, hasOfficial: true, level: level, unstable: false,
+      title: '温和稳定',
+      text: level === 0
+        ? '油耗接近甚至低于标称，每箱也稳定，骑行节奏比较温和。'
+        : '比标称' + vs + '，但每箱很稳，没有忽快忽慢，属于平稳骑法里的正常偏高。'
+    };
+  }
+
+  /* ---------------- 渲染 ---------------- */
+  function renderAll(){
+    var c = compute();
+    renderHero(c);
+    renderRecords(c);
+    renderAnalysis(c);
+  }
+
+  function renderHero(c){
+    var el = $('hero');
+    var last = c.segs[c.segs.length - 1];
+
+    if(!last){
+      var hint;
+      if(c.rs.length === 0){
+        hint = '先记第一次加油。这次只作起点，不算油耗。';
+      }else if(!c.firstFull){
+        hint = '还没有“加满”的记录。下次加油请加满，并选“加满了”，才能开始算。';
+      }else{
+        hint = '已经有起点了。再记一次“加满”的加油，就能算出第一段油耗。';
+      }
+      el.innerHTML =
+        '<div class="label">最近一次油耗</div>' +
+        '<div class="num dim">--</div>' +
+        '<div class="hero-row">' + hint + '</div>';
+      return;
+    }
+
+    el.innerHTML =
+      '<div class="label">最近一次油耗 · ' + fmtDate(last.date) + '</div>' +
+      '<div class="num">' + last.l100.toFixed(2) + '<small>L/100km</small></div>' +
+      '<div class="hero-row">' +
+        '<span>跑了 <b>' + fmtInt(last.dist) + '</b> km</span>' +
+        '<span>用了 <b>' + num(last.liters, 2) + '</b> L</span>' +
+        '<span>' + fmtInt(last.fromOdo) + ' → ' + fmtInt(last.toOdo) + '</span>' +
+      '</div>';
+  }
+
+  function renderRecords(c){
+    var list = $('recList');
+    var countEl = $('recCount');
+    countEl.textContent = c.rs.length ? (c.rs.length + ' 笔') : '';
+
+    if(!c.rs.length){
+      list.innerHTML = '<li class="empty">还没有记录。加完油在上面保存一笔。</li>';
+      return;
+    }
+
+    var firstFullId = c.firstFull ? c.firstFull.id : null;
+    var sorted = c.rs.slice().reverse();
+
+    list.innerHTML = sorted.map(function(r){
+      var tags = '';
+      var isAnomaly = c.anomalyIds && c.anomalyIds[r.id];
+      if(firstFullId && r.id === firstFullId) tags += '<span class="tag gold">起点</span>';
+      if(isAnomaly) tags += '<span class="tag warn">里程异常</span>';
+      if(!r.full) tags += '<span class="tag">没加满</span>';
+
+      var money = Number(r.money) > 0 ? ' · ' + num(r.money, 2) + ' 元' : '';
+      var road = r.road ? ' · ' + r.road : '';
+
+      return '<li class="rec">' +
+        '<div class="rec-main">' +
+          '<div class="rec-top"><b>' + fmtDate(r.date) + '</b>' +
+            '<span class="odo">' + fmtInt(r.odo) + ' km</span>' +
+            (tags ? ' <span>' + tags + '</span>' : '') +
+          '</div>' +
+          '<div class="rec-sub">' + num(r.liters, 2) + ' L' + money + road + '</div>' +
+        '</div>' +
+        '<button class="del" type="button" data-id="' + r.id + '" aria-label="删除">×</button>' +
+      '</li>';
+    }).join('');
+  }
+
+  function renderAnalysis(c){
+    var st = c.style;
+
+    $('avgRecent').innerHTML = c.recentAvg
+      ? c.recentAvg.toFixed(2) + '<small>个油</small>'
+      : '--';
+    $('avgAll').innerHTML = c.avg
+      ? c.avg.toFixed(2) + '<small>个油</small>'
+      : '--';
+
+    var official = Number(state.vehicle.official) || 0;
+    var vs = $('vsLine');
+    if(official > 0 && c.avg > 0){
+      var pct = Math.round((c.avg / official - 1) * 100);
+      var cls = pct > 0 ? 'up' : (pct < 0 ? 'down' : '');
+      var txt = pct > 0 ? ('高 ' + pct + '%') : (pct < 0 ? ('低 ' + Math.abs(pct) + '%') : '持平');
+      vs.innerHTML = '官方标称 ' + numText(official) + ' 个油，你实测比它 <b class="' + cls + '">' + txt + '</b>';
+    }else if(official <= 0){
+      vs.innerHTML = '还没填官方油耗，到“车辆”页补上，就能对比了。';
+    }else{
+      vs.innerHTML = '数据还不够，先多记几箱。';
+    }
+
+    var an = $('anomalyNote');
+    if(c.anomalies && c.anomalies.length){
+      an.style.display = 'block';
+      an.textContent = '有 ' + c.anomalies.length + ' 条记录的里程比前一条小，可能是填错了，已排除在计算外。请到记录列表删掉重记。';
+    }else{
+      an.style.display = 'none';
+    }
+
+    var cells = ['正常 · 稳', '费油 · 稳', '正常 · 不稳', '费油 · 不稳'];
+    var active = -1;
+    if(st.ready && st.hasOfficial && st.level >= 0){
+      active = (st.level >= 2 ? 1 : 0) + (st.unstable ? 2 : 0);
+    }
+    $('quad').innerHTML = cells.map(function(t, i){
+      return '<div class="qcell' + (i === active ? ' active' : '') + '">' + t + '</div>';
+    }).join('');
+
+    $('styleTitle').textContent = st.title;
+    $('styleText').textContent = st.text;
+
+    renderBars(c);
+
+    var stats = [
+      ['平均油耗', c.avg ? c.avg.toFixed(2) + ' 个油' : '--'],
+      ['每公里油钱', c.costPerKm ? c.costPerKm.toFixed(3) + ' 元' : '--'],
+      ['统计里程', c.totalDist ? fmtInt(c.totalDist) + ' km' : '--'],
+      ['统计油量', c.totalLiters ? num(c.totalLiters, 1) + ' L' : '--'],
+      ['平均油价', c.unitPrice ? c.unitPrice.toFixed(2) + ' 元/L' : '--'],
+      ['加满能跑', c.range ? Math.round(c.range) + ' km' : '--']
+    ];
+    $('statGrid').innerHTML = stats.map(function(s){
+      return '<div class="stat"><div class="k">' + s[0] + '</div><div class="v">' + s[1] + '</div></div>';
+    }).join('');
+  }
+
+  function renderBars(c){
+    var el = $('bars');
+    var hint = $('barsHint');
+
+    if(!c.segs.length){
+      el.innerHTML = '<div class="empty" style="width:100%">还没有完整的一段油耗</div>';
+      hint.textContent = '第一段油耗需要两次“加满”的加油才能算出来。';
+      return;
+    }
+
+    var vals = c.segs.map(function(s){ return s.l100; });
+    var mn = Math.min.apply(null, vals);
+    var mx = Math.max.apply(null, vals);
+    var span = (mx - mn) || 1;
+
+    el.innerHTML = c.segs.map(function(s, i){
+      var h = 26 + ((s.l100 - mn) / span) * 74;
+      return '<div class="bar-wrap">' +
+        '<div class="bar" style="height:' + h.toFixed(1) + '%"><span>' + s.l100.toFixed(1) + '</span></div>' +
+        '<div class="bar-x">' + (i + 1) + '</div>' +
+      '</div>';
+    }).join('');
+
+    hint.textContent = '横轴是第几段，柱子上是那一段的百公里油耗（' +
+      mn.toFixed(1) + ' ~ ' + mx.toFixed(1) + '）。';
+  }
+
+  function renderVehicle(){
+    $('v-name').value = state.vehicle.name || '';
+    $('v-tank').value = state.vehicle.tank || '';
+    $('v-official').value = state.vehicle.official ? numText(state.vehicle.official) : '';
+    $('hTitle').textContent = state.vehicle.name || '油耗本';
+  }
+
+  /* ---------------- 事件 ---------------- */
+  $('fuelForm').addEventListener('submit', function(e){
+    e.preventDefault();
+
+    var date = $('f-date').value || todayStr();
+    var odo = parseFloat(String($('f-odo').value).replace(',', '.'));
+    var liters = parseFloat(String($('f-liters').value).replace(',', '.'));
+    var moneyRaw = String($('f-money').value).trim();
+    var money = moneyRaw ? parseFloat(moneyRaw.replace(',', '.')) : 0;
+    var full = $('f-full').value === '1';
+    var road = $('f-road').value;
+
+    if(!isFinite(odo) || odo <= 0){ toast('总里程没填对'); $('f-odo').focus(); return; }
+    if(!isFinite(liters) || liters <= 0){ toast('加了多少升没填对'); $('f-liters').focus(); return; }
+    if(!isFinite(money) || money < 0){ money = 0; }
+
+    var tank = Number(state.vehicle.tank) || 0;
+    if(tank > 0 && liters > tank * 1.3){
+      if(!confirm('加了 ' + liters + ' 升，比油箱容积 ' + tank + ' 升大不少，确认没填错？')) return;
+    }
+
+    var maxOdo = state.records.reduce(function(m, r){
+      return Math.max(m, Number(r.odo) || 0);
+    }, 0);
+    if(maxOdo > 0 && odo < maxOdo){
+      if(!confirm('这次填的里程 ' + fmtInt(odo) + ' 比之前最大的 ' + fmtInt(maxOdo) + ' 还小，确认没填错？')) return;
+    }
+
+    var dup = state.records.some(function(r){ return Number(r.odo) === odo; });
+    if(dup){
+      if(!confirm('已经有一条相同里程的记录了，还要保存吗？')) return;
+    }
+
+    var now = Date.now();
+    state.records.push({
+      id: now.toString(36) + Math.random().toString(36).slice(2, 6),
+      ts: now,
+      date: date,
+      odo: odo,
+      liters: liters,
+      money: money,
+      full: full,
+      road: road
+    });
+    save();
+
+    $('fuelForm').reset();
+    $('f-date').value = todayStr();
+    $('f-full').value = '1';
+    $('f-road').value = '混合';
+    $('f-odo').focus();
+
+    renderAll();
+    toast('已保存');
+  });
+
+  $('recList').addEventListener('click', function(e){
+    var btn = e.target.closest('.del');
+    if(!btn) return;
+    var id = btn.getAttribute('data-id');
+    if(!confirm('删掉这条记录？')) return;
+    state.records = state.records.filter(function(r){ return r.id !== id; });
+    save();
+    renderAll();
+    toast('已删除');
+  });
+
+  $('v-save').addEventListener('click', function(){
+    var name = String($('v-name').value).trim() || DEFAULTS.vehicle.name;
+    var tank = parseFloat(String($('v-tank').value).replace(',', '.'));
+    var official = parseFloat(String($('v-official').value).replace(',', '.'));
+
+    state.vehicle.name = name;
+    state.vehicle.tank = isFinite(tank) && tank > 0 ? tank : DEFAULTS.vehicle.tank;
+    state.vehicle.official = isFinite(official) && official > 0 ? official : 0;
+
+    save();
+    renderVehicle();
+    renderAll();
+    toast('车辆信息已保存');
+  });
+
+  $('btn-export').addEventListener('click', function(){
+    try{
+      var data = JSON.stringify(state, null, 2);
+      var blob = new Blob([data], { type: 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url;
+      a.download = 'TX250油耗备份-' + todayStr() + '.json';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+      toast('已导出');
+    }catch(err){
+      toast('导出失败');
+    }
+  });
+
+  $('btn-import').addEventListener('click', function(){
+    $('fileInput').click();
+  });
+
+  $('fileInput').addEventListener('change', function(e){
+    var file = e.target.files && e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(){
+      try{
+        var d = JSON.parse(String(reader.result));
+        if(!d || !Array.isArray(d.records)) throw new Error('bad');
+        if(!confirm('导入会覆盖现在的 ' + state.records.length + ' 条记录，继续？')) return;
+
+        state.vehicle = Object.assign({}, DEFAULTS.vehicle, d.vehicle || {});
+        state.records = d.records;
+        save();
+        renderVehicle();
+        renderAll();
+        toast('导入成功，共 ' + state.records.length + ' 条');
+      }catch(err){
+        toast('文件读不出来，可能不是备份文件');
+      }finally{
+        e.target.value = '';
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  $('btn-clear').addEventListener('click', function(){
+    if(!state.records.length){ toast('本来就没有记录'); return; }
+    if(!confirm('确定清空全部 ' + state.records.length + ' 条加油记录？建议先导出备份。')) return;
+    state.records = [];
+    save();
+    renderAll();
+    toast('已清空');
+  });
+
+  function activateTab(tab){
+    document.querySelectorAll('nav button').forEach(function(b){
+      b.classList.toggle('active', b.getAttribute('data-tab') === tab);
+    });
+    document.querySelectorAll('.tab-page').forEach(function(p){
+      p.classList.toggle('show', p.id === 'page-' + tab);
+    });
+  }
+
+  document.querySelectorAll('nav button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      activateTab(btn.getAttribute('data-tab'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  });
+
+  /* ---------------- 启动 ---------------- */
+  $('f-date').value = todayStr();
+  renderVehicle();
+  renderAll();
+
+  var hashTab = String(location.hash || '').replace('#', '');
+  if(hashTab === 'analysis' || hashTab === 'vehicle') activateTab(hashTab);
+
+  // 方便以后调试：window.__fuel = state
+  window.__fuel = state;
+
+  // 注册离线缓存：只在 https 下生效，局域网 http 访问不会报错
+  if('serviceWorker' in navigator && location.protocol === 'https:'){
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('./sw.js').catch(function(){ /* 忽略 */ });
+    });
+  }
+
+})();
+</script>
+</body>
+</html>
