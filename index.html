@@ -329,6 +329,7 @@
 
     <div class="card">
       <h2>数据</h2>
+      <button class="ghost" type="button" id="btn-migrate">迁移到新版（自动带数据）</button>
       <button class="ghost" type="button" id="btn-export">导出备份（JSON 文件）</button>
       <button class="ghost" type="button" id="btn-import">从备份文件导入</button>
       <button class="ghost danger" type="button" id="btn-clear">清空全部记录</button>
@@ -403,6 +404,12 @@
 
   var state = load();
 
+  // 从旧地址“迁移到新版”链接带过来的数据：#import=<base64>
+  if(importFromHash()){
+    save();
+    setTimeout(function(){ toast('已存入 ' + state.records.length + ' 条记录'); }, 400);
+  }
+
   // 演示模式：地址后加 ?demo=1。只在没有真实记录时生效，全程不写入本地存储。
   var DEMO = /[?&]demo=1/.test(location.search);
   if(DEMO && state.records.length === 0){
@@ -466,6 +473,36 @@
       localStorage.setItem(KEY, JSON.stringify(state));
     }catch(e){
       toast('保存失败：浏览器可能禁用了本地存储');
+    }
+  }
+
+  // 解析地址里的 #import=...，把旧地址的数据搬过来
+  function importFromHash(){
+    var m = String(location.hash || '').match(/import=([^&]+)/);
+    if(!m) return false;
+    try{
+      var json = decodeURIComponent(escape(atob(decodeURIComponent(m[1]))));
+      var d = JSON.parse(json);
+      if(!d || !Array.isArray(d.records)) return false;
+
+      if(state.records.length > 0){
+        if(!confirm('新版里已经记了 ' + state.records.length + ' 条，导入会用旧数据覆盖，继续吗？')) return false;
+      }
+
+      var v = Object.assign({}, DEFAULTS.vehicle, d.vehicle || {});
+      // 旧版默认值是 13L / 3.0，一并纠正
+      if((d.version || 1) < 2 && Number(v.tank) === 13 && Number(v.official) === 3){
+        v.tank = DEFAULTS.vehicle.tank;
+        v.official = DEFAULTS.vehicle.official;
+      }
+      state.vehicle = v;
+      state.records = d.records;
+
+      // 去掉 hash，避免刷新时重复导入
+      history.replaceState(null, '', location.pathname + location.search);
+      return true;
+    }catch(e){
+      return false;
     }
   }
 
@@ -908,6 +945,28 @@
     renderAll();
     toast('车辆信息已保存');
   });
+
+  // 迁移按钮：把当前数据打包进链接，跳到新版自动导入
+  if(location.hostname === 'changlan4.github.io'){
+    $('btn-migrate').style.display = 'none';
+  }else{
+    $('btn-migrate').addEventListener('click', function(){
+      if(!state.records.length){
+        toast('还没有记录可迁移');
+        return;
+      }
+      var json = JSON.stringify(state);
+      var payload = encodeURIComponent(btoa(unescape(encodeURIComponent(json))));
+      var url = 'https://changlan4.github.io/tx250-fuel/#import=' + payload;
+
+      if(url.length > 7500){
+        alert('记录太多了，链接装不下。请改用“导出备份”，再在新版里“从备份文件导入”。');
+        return;
+      }
+      if(!confirm('带着 ' + state.records.length + ' 条记录跳到新版？数据会原样搬过去。')) return;
+      location.href = url;
+    });
+  }
 
   $('btn-export').addEventListener('click', function(){
     try{
